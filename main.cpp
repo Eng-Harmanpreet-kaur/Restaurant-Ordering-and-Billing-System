@@ -580,67 +580,299 @@ public:
         cout << "8. Cold Coffee\n";
         cout << "9. Shakes\n";
         cout << "10. Mojito\n";
+        cout << "11. Check Recent Added Item \n";
+        cout << "12. Delete Recent Added Item \n";
         cout << "=====================================\n";
+    }
+};
+
+struct OrderNode
+{
+    string itemName;
+    int price;
+    int quantity;
+    int amount;
+    int category;
+    OrderNode *next;
+
+    OrderNode(string name, int p, int q, int a, int c)
+    {
+        itemName = name;
+        price = p;
+        quantity = q;
+        amount = a;
+        category = c;
+        next = nullptr;
+    }
+};
+
+struct StackNode
+{
+    string itemName;
+    StackNode *next;
+
+    StackNode(string name)
+    {
+        itemName = name;
+        next = nullptr;
+    }
+};
+
+class OrderStack
+{
+private:
+    StackNode *top;
+
+public:
+    OrderStack()
+    {
+        top = nullptr;
+    }
+    void push(string name)
+    {
+        StackNode *newNode = new StackNode(name);
+        newNode->next = top;
+        top = newNode;
+    }
+
+    void showLastOrder()
+    {
+        if (top == nullptr)
+        {
+            cout << "No order has been placed yet.\\n";
+        }
+        else
+        {
+            cout << "Most recent item: " << top->itemName << endl;
+        }
+    }
+
+    void removeLastOrder()
+    {
+        if (top == nullptr)
+        {
+            cout << "No recent item to delete.\n";
+            return;
+        }
+
+        StackNode *temp = top;
+        top = top->next;
+        delete temp;
+    }
+
+    ~OrderStack()
+    {
+        while (top != nullptr)
+        {
+            StackNode *temp = top;
+            top = top->next;
+            delete temp;
+        }
+    }
+};
+
+struct QueueNode
+{
+    string itemName;
+    QueueNode *next;
+
+    QueueNode(string name)
+    {
+        itemName = name;
+        next = nullptr;
+    }
+};
+
+class OrderQueue
+{
+private:
+    QueueNode *front;
+    QueueNode *rear;
+
+public:
+    OrderQueue()
+    {
+        front = nullptr;
+        rear = nullptr;
+    }
+    void clear()
+    {
+        while (front != nullptr)
+        {
+            QueueNode *temp = front;
+            front = front->next;
+            delete temp;
+        }
+        rear = nullptr;
+    }
+
+    void enqueue(string name)
+    {
+        QueueNode *newNode = new QueueNode(name);
+
+        if (rear == nullptr)
+        {
+            front = rear = newNode;
+        }
+        else
+        {
+            rear->next = newNode;
+            rear = newNode;
+        }
+    }
+
+    void displayOrders()
+    {
+        if (front == nullptr)
+        {
+            cout << "No orders in queue.\n";
+            return;
+        }
+
+        QueueNode *current = front;
+
+        cout << "\nOrders (First to Last):\n";
+
+        while (current != nullptr)
+        {
+            cout << current->itemName << endl;
+            current = current->next;
+        }
+    }
+
+    void removeLastOrder()
+    {
+        if (front == nullptr)
+            return;
+        if (front == rear)
+        {
+            delete front;
+            front = rear = nullptr;
+            return;
+        }
+        QueueNode *current = front;
+        while (current->next != rear)
+            current = current->next;
+        delete rear;
+        rear = current;
+        rear->next = nullptr;
+    }
+
+    ~OrderQueue()
+    {
+        clear();
     }
 };
 
 class Restaurant
 {
 private:
-    string pizzaDetails;
-    string pastaDetails;
-    string burgerDetails;
-    string friesDetails;
-    string manchurianDetails;
-    string noodlesDetails;
-    string dessertDetails;
-    string coffeeDetails;
-    string shakeDetails;
-    string mojitoDetails;
+    OrderNode *orderHead;
+    OrderNode *orderTail;
+    OrderStack recentOrders;
+    OrderQueue orderQueue;
 
-    int pizzaBill;
-    int pastaBill;
-    int burgerBill;
-    int friesBill;
-    int manchurianBill;
-    int noodlesBill;
-    int dessertBill;
-    int coffeeBill;
-    int shakeBill;
-    int mojitoBill;
-    int totalBill;
-
-public:
-    int getInteger(string message)
+    string categoryName(int category)
     {
-        int value = 0;
-        cout << message;
-        cin >> value;
-        if (cin.fail())
+        switch (category)
         {
-            cout << "\n< ERROR: " << message << "must be an integer >" << endl;
-            cin.clear();
-            cin.ignore(1000, '\n');
-            return 0;
-            cin.ignore();
+        case 1:
+            return "Pizza";
+        case 2:
+            return "Pasta";
+        case 3:
+            return "Burger";
+        case 4:
+            return "French Fries";
+        case 5:
+            return "Manchurian";
+        case 6:
+            return "Noodles";
+        case 7:
+            return "Dessert";
+        case 8:
+            return "Cold Coffee";
+        case 9:
+            return "Shakes";
+        case 10:
+            return "Mojito";
+        default:
+            return "Other";
         }
-        else
-            return value;
     }
 
+    void writeBill(ostream &out)
+    {
+        if (orderHead == nullptr)
+        {
+            out << "No items ordered.\n";
+            return;
+        }
+
+        int grandTotal = 0;
+        out << "\n========== FINAL RESTAURANT BILL ==========\n";
+
+        for (int category = 1; category <= 10; category++)
+        {
+            OrderNode *current = orderHead;
+            int categoryTotal = 0;
+            bool headingPrinted = false;
+
+            while (current != nullptr)
+            {
+                if (current->category == category)
+                {
+                    if (!headingPrinted)
+                    {
+                        out << "\n************ " << categoryName(category) << " BILL ************\n";
+                        headingPrinted = true;
+                    }
+                    out << current->itemName << "\n";
+                    out << "Price: Rs. " << current->price << "\n";
+                    out << "Quantity: " << current->quantity << "\n";
+                    out << "Calculation: Rs. " << current->price << " x "
+                        << current->quantity << " = Rs. " << current->amount << "\n";
+                    out << "----------------------------------\n";
+                    categoryTotal += current->amount;
+                }
+                current = current->next;
+            }
+
+            if (headingPrinted)
+                out << categoryName(category) << " Total: Rs. " << categoryTotal << "\n";
+        }
+
+        OrderNode *current = orderHead;
+        while (current != nullptr)
+        {
+            grandTotal += current->amount;
+            current = current->next;
+        }
+
+        out << "\n-------------------------------------\n";
+        out << "GRAND TOTAL: Rs. " << grandTotal << "\n";
+        out << "=====================================\n";
+    }
+
+public:
     Restaurant()
     {
-        pizzaBill = 0;
-        pastaBill = 0;
-        burgerBill = 0;
-        friesBill = 0;
-        manchurianBill = 0;
-        noodlesBill = 0;
-        dessertBill = 0;
-        coffeeBill = 0;
-        shakeBill = 0;
-        mojitoBill = 0;
-        totalBill = 0;
+        orderHead = nullptr;
+        orderTail = nullptr;
+    }
+
+    int getInteger(string message)
+    {
+        int value;
+        cout << message;
+        while (!(cin >> value))
+        {
+            cout << "Please enter an integer only.\n";
+            cin.clear();
+            cin.ignore(1000, '\n');
+            cout << message;
+        }
+        return value;
     }
 
     void placeOrder()
@@ -657,77 +889,71 @@ public:
         Shake shake;
         Mojito mojito;
 
-        int category, choice, quantity;
         int more = 1;
-
         while (more == 1)
         {
             menu.displayMainMenu();
+            int category = getInteger("Enter choice: ");
 
-            category = getInteger("Enter choice: ");
+            if (category == 11)
+            {
+                recentOrders.showLastOrder();
+                continue;
+            }
+            if (category == 12)
+            {
+                deleteLastNode();
+                continue;
+            }
 
             FoodItem *item = nullptr;
-
-            if (category == 1)
+            switch (category)
             {
+            case 1:
                 item = &pizza;
-            }
-            else if (category == 2)
-            {
+                break;
+            case 2:
                 item = &pasta;
-            }
-            else if (category == 3)
-            {
+                break;
+            case 3:
                 item = &burger;
-            }
-            else if (category == 4)
-            {
+                break;
+            case 4:
                 item = &fries;
-            }
-            else if (category == 5)
-            {
+                break;
+            case 5:
                 item = &manchurian;
-            }
-            else if (category == 6)
-            {
+                break;
+            case 6:
                 item = &noodles;
-            }
-            else if (category == 7)
-            {
+                break;
+            case 7:
                 item = &dessert;
-            }
-            else if (category == 8)
-            {
+                break;
+            case 8:
                 item = &coffee;
-            }
-            else if (category == 9)
-            {
+                break;
+            case 9:
                 item = &shake;
-            }
-            else if (category == 10)
-            {
+                break;
+            case 10:
                 item = &mojito;
-            }
-            else
-            {
-                cout << "Invalid category! Please select 1 to 10.\n";
+                break;
+            default:
+                cout << "Invalid category! Please select 1 to 12.\n";
                 continue;
             }
 
             item->displayMenu();
-
-            choice = getInteger("Enter food item Choice: ");
-
+            int choice = getInteger("Enter food item Choice: ");
             int price = item->getPrice(choice);
-
-            if (price == 0)
+            if (price <= 0)
             {
                 cout << "Invalid food item! Please select a valid number.\n";
                 continue;
             }
 
-            quantity = getInteger("Enter quantity: ");
-
+            int quantity = getInteger("Enter quantity: ");
             if (quantity <= 0)
             {
                 cout << "Quantity must be greater than zero.\n";
@@ -735,311 +961,190 @@ public:
             }
 
             string itemName = item->getItemName(choice);
-
             int amount = price * quantity;
+            OrderNode *newOrder = new OrderNode(itemName, price, quantity, amount, category);
 
-            string details = itemName + "\n";
-            details += "Price: Rs. " + to_string(price) + "\n";
-            details += "Quantity: " + to_string(quantity) + "\n";
-            details += "Calculation: Rs. " + to_string(price) + " x " + to_string(quantity) + " = Rs. " + to_string(amount) + "\n";
-            details += "----------------------------------\n";
-
-            if (category == 1)
+            if (orderHead == nullptr)
+                orderHead = orderTail = newOrder;
+            else
             {
-                pizzaBill += amount;
-                pizzaDetails += details;
-            }
-            else if (category == 2)
-            {
-                pastaBill += amount;
-                pastaDetails += details;
-            }
-            else if (category == 3)
-            {
-                burgerBill += amount;
-                burgerDetails += details;
-            }
-            else if (category == 4)
-            {
-                friesBill += amount;
-                friesDetails += details;
-            }
-            else if (category == 5)
-            {
-                manchurianBill += amount;
-                manchurianDetails += details;
-            }
-            else if (category == 6)
-            {
-                noodlesBill += amount;
-                noodlesDetails += details;
-            }
-            else if (category == 7)
-            {
-                dessertBill += amount;
-                dessertDetails += details;
-            }
-            else if (category == 8)
-            {
-                coffeeBill += amount;
-                coffeeDetails += details;
-            }
-            else if (category == 9)
-            {
-                shakeBill += amount;
-                shakeDetails += details;
-            }
-            else if (category == 10)
-            {
-                mojitoBill += amount;
-                mojitoDetails += details;
+                orderTail->next = newOrder;
+                orderTail = newOrder;
             }
 
-            totalBill += amount;
-
+            recentOrders.push(itemName);
+            orderQueue.enqueue(itemName);
             cout << "\nItem added successfully!\n";
 
-            more = getInteger(
-                "\nDo you want to order more?\n1. Yes\n2. No\nEnter choice: ");
-
+            more = getInteger("\nDo you want to order more?\n1. Yes\n2. No\nEnter choice: ");
             while (more != 1 && more != 2)
             {
                 cout << "Please enter 1 or 2 only.\n";
                 more = getInteger("Enter choice: ");
             }
         }
+
+        displayBill();
+        saveBill();
     }
 
-    void displayBill()
+    void deleteLastNode()
     {
-        cout << "\n\n========== FINAL RESTAURANT BILL ==========\n";
-
-        if (pizzaBill > 0)
+        if (orderHead == nullptr)
         {
-            cout << "\n************ PIZZA BILL ************\n";
-            cout << pizzaDetails;
-            cout << "Pizza Total: Rs. " << pizzaBill << endl;
+            cout << "No items to delete.\n";
+            return;
         }
 
-        if (pastaBill > 0)
+        OrderNode *removed = orderTail;
+        string removedName = removed->itemName;
+
+        if (orderHead == orderTail)
+            orderHead = orderTail = nullptr;
+        else
         {
-            cout << "\n************ PASTA BILL ************\n";
-            cout << pastaDetails;
-            cout << "Pasta Total: Rs. " << pastaBill << endl;
+            OrderNode *current = orderHead;
+            while (current->next != orderTail)
+                current = current->next;
+            current->next = nullptr;
+            orderTail = current;
         }
 
-        if (burgerBill > 0)
-        {
-            cout << "\n************ BURGER BILL ************\n";
-            cout << burgerDetails;
-            cout << "Burger Total: Rs. " << burgerBill << endl;
-        }
-
-        if (friesBill > 0)
-        {
-            cout << "\n************ FRENCH FRIES BILL ************\n"
-                 << friesDetails;
-            cout << "French Fries Total: Rs. " << friesBill << endl;
-        }
-        if (manchurianBill > 0)
-        {
-            cout << "\n************ MANCHURIAN BILL ************\n"
-                 << manchurianDetails;
-            cout << "Manchurian Total: Rs. " << manchurianBill << endl;
-        }
-        if (noodlesBill > 0)
-        {
-            cout << "\n************ NOODLES BILL ************\n"
-                 << noodlesDetails;
-            cout << "Noodles Total: Rs. " << noodlesBill << endl;
-        }
-        if (dessertBill > 0)
-        {
-            cout << "\n************ DESSERT BILL ************\n"
-                 << dessertDetails;
-            cout << "Dessert Total: Rs. " << dessertBill << endl;
-        }
-        if (coffeeBill > 0)
-        {
-            cout << "\n************ COLD COFFEE BILL ************\n"
-                 << coffeeDetails;
-            cout << "Cold Coffee Total: Rs. " << coffeeBill << endl;
-        }
-        if (shakeBill > 0)
-        {
-            cout << "\n************ SHAKES BILL ************\n"
-                 << shakeDetails;
-            cout << "Shakes Total: Rs. " << shakeBill << endl;
-        }
-        if (mojitoBill > 0)
-        {
-            cout << "\n************ MOJITO BILL ************\n"
-                 << mojitoDetails;
-            cout << "Mojito Total: Rs. " << mojitoBill << endl;
-        }
-
-        cout << "\n-------------------------------------\n";
-        cout << "GRAND TOTAL: Rs. " << totalBill << endl;
-        cout << "=====================================\n";
+        delete removed;
+        recentOrders.removeLastOrder();
+        orderQueue.removeLastOrder();
+        cout << "Deleted most recent item: " << removedName << "\n";
     }
+
+    void displayOrderList()
+    {
+        if (orderHead == nullptr)
+        {
+            cout << "No items ordered.\n";
+            return;
+        }
+        cout << "\n========== ORDER LIST ==========\n";
+        OrderNode *current = orderHead;
+        while (current != nullptr)
+        {
+            cout << current->itemName << " | Price: Rs. " << current->price
+                 << " | Quantity: " << current->quantity
+                 << " | Amount: Rs. " << current->amount << "\n";
+            current = current->next;
+        }
+    }
+
+    void displayOrderQueue() { orderQueue.displayOrders(); }
+    void displayBill() { writeBill(cout); }
 
     void saveBill()
     {
-        ofstream file("restaurant_bill.dat");
-
+        ofstream file("restaurant_bill.dat", ios::app);
         if (!file)
         {
             cout << "Unable to save bill.\n";
             return;
         }
-
-        file << "========== FINAL RESTAURANT BILL ==========\n";
-
-        if (pizzaBill > 0)
-        {
-            file << "\n************ PIZZA BILL ************\n";
-            file << pizzaDetails;
-            file << "Pizza Total: Rs. " << pizzaBill << endl;
-        }
-
-        if (pastaBill > 0)
-        {
-            file << "\n************ PASTA BILL ************\n";
-            file << pastaDetails;
-            file << "Pasta Total: Rs. " << pastaBill << endl;
-        }
-
-        if (burgerBill > 0)
-        {
-            file << "\n************ BURGER BILL ************\n";
-            file << burgerDetails;
-            file << "Burger Total: Rs. " << burgerBill << endl;
-        }
-
-        if (friesBill > 0)
-        {
-            file << "\n************ FRENCH FRIES BILL ************\n"
-                 << friesDetails;
-            file << "French Fries Total: Rs. " << friesBill << endl;
-        }
-        if (manchurianBill > 0)
-        {
-            file << "\n************ MANCHURIAN BILL ************\n"
-                 << manchurianDetails;
-            file << "Manchurian Total: Rs. " << manchurianBill << endl;
-        }
-        if (noodlesBill > 0)
-        {
-            file << "\n************ NOODLES BILL ************\n"
-                 << noodlesDetails;
-            file << "Noodles Total: Rs. " << noodlesBill << endl;
-        }
-        if (dessertBill > 0)
-        {
-            file << "\n************ DESSERT BILL ************\n"
-                 << dessertDetails;
-            file << "Dessert Total: Rs. " << dessertBill << endl;
-        }
-        if (coffeeBill > 0)
-        {
-            file << "\n************ COLD COFFEE BILL ************\n"
-                 << coffeeDetails;
-            file << "Cold Coffee Total: Rs. " << coffeeBill << endl;
-        }
-        if (shakeBill > 0)
-        {
-            file << "\n************ SHAKES BILL ************\n"
-                 << shakeDetails;
-            file << "Shakes Total: Rs. " << shakeBill << endl;
-        }
-        if (mojitoBill > 0)
-        {
-            file << "\n************ MOJITO BILL ************\n"
-                 << mojitoDetails;
-            file << "Mojito Total: Rs. " << mojitoBill << endl;
-        }
-
-        file << "\nGRAND TOTAL: Rs. " << totalBill << endl;
-        file << "============================================\n";
-
-        file.close();
-
+        writeBill(file);
+        file << "\n\n";
         cout << "\nBill saved successfully!\n";
     }
 
     void readBill()
     {
         ifstream file("restaurant_bill.dat");
-
         if (!file)
         {
-            cout << "Unable to read saved bill.\n";
+            cout << "No saved bill found.\n";
             return;
         }
-
         string line;
-
-        cout << "\n========== BILL FROM FILE ==========\n";
-
+        cout << "\n========== SAVED BILLS ==========\n";
         while (getline(file, line))
-        {
-            cout << line << endl;
-        }
+            cout << line << '\n';
+    }
 
-        file.close();
+    ~Restaurant()
+    {
+        while (orderHead != nullptr)
+        {
+            OrderNode *temp = orderHead;
+            orderHead = orderHead->next;
+            delete temp;
+        }
+        orderTail = nullptr;
     }
 };
-void coustomer()
+
+void coustomer(Restaurant &restaurant)
 {
-    Restaurant restaurant;
-
     cout << "Welcome to Our Restaurant!\n";
-
     restaurant.placeOrder();
-
-    restaurant.displayBill();
-
-    restaurant.saveBill();
 }
 
-void staff()
+void staff(Restaurant &restaurant)
 {
-    Restaurant restaurant;
-    int code = 4567;
-    int c;
-    c = restaurant.getInteger("Enter code :");
-    if (code == c)
+    int code = 9874;
+    int enteredCode;
+    int choice;
+
+    enteredCode = restaurant.getInteger("Enter staff password: ");
+
+    if (enteredCode != code)
     {
-        restaurant.readBill();
-    }
-    else
-    {
-        cout << " code is in correct! try again";
+        cout << "Incorrect password! Access denied.\n";
         return;
     }
+    cout << "\n========== STAFF PANEL ==========\n";
+    do
+    {
+        cout << "\n1. View Saved Bills\n";
+        cout << "2. View Pending Orders\n";
+        cout << "3. Logout\n";
+
+        choice = restaurant.getInteger("Enter your choice: ");
+
+        switch (choice)
+        {
+        case 1:
+            restaurant.readBill();
+            break;
+
+        case 2:
+            restaurant.displayOrderQueue();
+            break;
+
+        case 3:
+            cout << "Staff logged out successfully.\n";
+            break;
+
+        default:
+            cout << "Invalid choice! Please select 1 to 3.\n";
+        }
+
+    } while (choice != 3);
 }
 
 int main()
 {
     Restaurant restaurant;
+    int position = 0;
 
-    int position;
-    cout << "================Enter your position================\n";
-    cout << "1> Coustomer \n2> Staff\n";
-    position = restaurant.getInteger("Enter your position: ");
-    switch (position)
+    do
     {
-    case 1:
-        coustomer();
-        break;
-    case 2:
-        staff();
-        break;
-    default:
-        cout << "Invalid Position";
-        break;
-    }
-    cout << "\nThank you for visiting our restaurant!\n";
+        cout << "\n================ RESTAURANT SYSTEM ================\n";
+        cout << "1> Customer\n2> Staff\n3> Exit\n";
+        position = restaurant.getInteger("Enter your position: ");
 
+        if (position == 1)
+            coustomer(restaurant);
+        else if (position == 2)
+            staff(restaurant);
+        else if (position != 3)
+            cout << "Invalid position.\n";
+
+    } while (position != 3);
+
+    cout << "\nThank you for visiting our restaurant!\n";
     return 0;
 }
