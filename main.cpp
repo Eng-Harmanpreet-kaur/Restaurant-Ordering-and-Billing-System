@@ -1233,7 +1233,7 @@ int main()
 {
     Restaurant restaurant;
     int position = 0;
-
+    system("cls");
     do
     {
         cout << "\n================ RESTAURANT SYSTEM ================\n";
