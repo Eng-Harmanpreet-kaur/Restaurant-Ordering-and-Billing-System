@@ -635,7 +635,7 @@ public:
         top = newNode;
     }
 
-    void showLastOrder()
+    void showLastOrderstack()
     {
         if (top == nullptr)
         {
@@ -647,7 +647,7 @@ public:
         }
     }
 
-    void removeLastOrder()
+    void removeLastOrderstack()
     {
         if (top == nullptr)
         {
@@ -695,17 +695,6 @@ public:
         front = nullptr;
         rear = nullptr;
     }
-    void clear()
-    {
-        while (front != nullptr)
-        {
-            QueueNode *temp = front;
-            front = front->next;
-            delete temp;
-        }
-        rear = nullptr;
-    }
-
     void enqueue(string name)
     {
         QueueNode *newNode = new QueueNode(name);
@@ -721,7 +710,7 @@ public:
         }
     }
 
-    void displayOrders()
+    void displayOrdersQueue()
     {
         if (front == nullptr)
         {
@@ -730,9 +719,9 @@ public:
         }
 
         QueueNode *current = front;
-
+        cout << "=======================================\n";
         cout << "\nOrders (First to Last):\n";
-
+        cout << "=======================================\n";
         while (current != nullptr)
         {
             cout << current->itemName << endl;
@@ -740,7 +729,7 @@ public:
         }
     }
 
-    void removeLastOrder()
+    void removeLastOrderQueue()
     {
         if (front == nullptr)
             return;
@@ -758,9 +747,36 @@ public:
         rear->next = nullptr;
     }
 
+    void removeFirstOrderQueue()
+    {
+        if (front == nullptr)
+        {
+            cout << "No pending order to mark as ready.\n";
+            return;
+        }
+
+        QueueNode *temp = front;
+        string readyItem = temp->itemName;
+
+        front = front->next;
+
+        if (front == nullptr)
+            rear = nullptr;
+
+        delete temp;
+
+        cout << "Ready order delivered and removed from pending orders: "
+             << readyItem << "\n";
+    }
     ~OrderQueue()
     {
-        clear();
+        while (front != nullptr)
+        {
+            QueueNode *temp = front;
+            front = front->next;
+            delete temp;
+        }
+        rear = nullptr;
     }
 };
 
@@ -801,16 +817,16 @@ private:
         }
     }
 
-    void writeBill(ostream &out)
+    void writeBill()
     {
         if (orderHead == nullptr)
         {
-            out << "No items ordered.\n";
+            cout << "No items ordered.\n";
             return;
         }
 
         int grandTotal = 0;
-        out << "\n========== FINAL RESTAURANT BILL ==========\n";
+        cout << "\n========== FINAL RESTAURANT BILL ==========\n";
 
         for (int category = 1; category <= 10; category++)
         {
@@ -824,22 +840,22 @@ private:
                 {
                     if (!headingPrinted)
                     {
-                        out << "\n************ " << categoryName(category) << " BILL ************\n";
+                        cout << "\n************ " << categoryName(category) << " BILL ************\n";
                         headingPrinted = true;
                     }
-                    out << current->itemName << "\n";
-                    out << "Price: Rs. " << current->price << "\n";
-                    out << "Quantity: " << current->quantity << "\n";
-                    out << "Calculation: Rs. " << current->price << " x "
-                        << current->quantity << " = Rs. " << current->amount << "\n";
-                    out << "----------------------------------\n";
+                    cout << current->itemName << "\n";
+                    cout << "Price: Rs. " << current->price << "\n";
+                    cout << "Quantity: " << current->quantity << "\n";
+                    cout << "Calculation: Rs. " << current->price << " x "
+                         << current->quantity << " = Rs. " << current->amount << "\n";
+                    cout << "----------------------------------\n";
                     categoryTotal += current->amount;
                 }
                 current = current->next;
             }
 
             if (headingPrinted)
-                out << categoryName(category) << " Total: Rs. " << categoryTotal << "\n";
+                cout << categoryName(category) << " Total: Rs. " << categoryTotal << "\n";
         }
 
         OrderNode *current = orderHead;
@@ -849,9 +865,62 @@ private:
             current = current->next;
         }
 
-        out << "\n-------------------------------------\n";
-        out << "GRAND TOTAL: Rs. " << grandTotal << "\n";
-        out << "=====================================\n";
+        cout << "\n-------------------------------------\n";
+        cout << "GRAND TOTAL: Rs. " << grandTotal << "\n";
+        cout << "=====================================\n";
+    }
+
+    void writeBillToFile(ofstream &file)
+    {
+        if (orderHead == nullptr)
+        {
+            file << "No items ordered.\n";
+            return;
+        }
+
+        int grandTotal = 0;
+        file << "\n========== FINAL RESTAURANT BILL ==========\n";
+
+        for (int category = 1; category <= 10; category++)
+        {
+            OrderNode *current = orderHead;
+            int categoryTotal = 0;
+            bool headingPrinted = false;
+
+            while (current != nullptr)
+            {
+                if (current->category == category)
+                {
+                    if (!headingPrinted)
+                    {
+                        file << "\n************ " << categoryName(category) << " BILL ************\n";
+                        headingPrinted = true;
+                    }
+                    file << current->itemName << "\n";
+                    file << "Price: Rs. " << current->price << "\n";
+                    file << "Quantity: " << current->quantity << "\n";
+                    file << "Calculation: Rs. " << current->price << " x ";
+                    file << current->quantity << " = Rs. " << current->amount << "\n";
+                    file << "----------------------------------\n";
+                    categoryTotal += current->amount;
+                }
+                current = current->next;
+            }
+
+            if (headingPrinted)
+                file << categoryName(category) << " Total: Rs. " << categoryTotal << "\n";
+        }
+
+        OrderNode *current = orderHead;
+        while (current != nullptr)
+        {
+            grandTotal += current->amount;
+            current = current->next;
+        }
+
+        file << "\n-------------------------------------\n";
+        file << "GRAND TOTAL: Rs. " << grandTotal << "\n";
+        file << "=====================================\n";
     }
 
 public:
@@ -897,7 +966,7 @@ public:
 
             if (category == 11)
             {
-                recentOrders.showLastOrder();
+                recentOrders.showLastOrderstack();
                 continue;
             }
             if (category == 12)
@@ -986,6 +1055,7 @@ public:
 
         displayBill();
         saveBill();
+        deleteAllNodes();
     }
 
     void deleteLastNode()
@@ -1011,9 +1081,34 @@ public:
         }
 
         delete removed;
-        recentOrders.removeLastOrder();
-        orderQueue.removeLastOrder();
+        recentOrders.removeLastOrderstack();
+        orderQueue.removeLastOrderQueue();
         cout << "Deleted most recent item: " << removedName << "\n";
+    }
+    void deleteAllNodes()
+    {
+        if (orderHead == nullptr)
+        {
+            cout << "Linked list is already empty.\n";
+            return;
+        }
+
+        OrderNode *current = orderHead;
+
+        while (current != nullptr)
+        {
+            OrderNode *temp = current;
+            current = current->next;
+            delete temp;
+        }
+
+        orderHead = nullptr;
+        orderTail = nullptr;
+    }
+
+    void removeFirstPendingOrder()
+    {
+        orderQueue.removeFirstOrderQueue();
     }
 
     void displayOrderList()
@@ -1027,15 +1122,22 @@ public:
         OrderNode *current = orderHead;
         while (current != nullptr)
         {
-            cout << current->itemName << " | Price: Rs. " << current->price
-                 << " | Quantity: " << current->quantity
-                 << " | Amount: Rs. " << current->amount << "\n";
+            cout << current->itemName;
+            cout << ",      Price: Rs. " << current->price;
+            cout << ",      Quantity: " << current->quantity;
+            cout << ",      Amount: Rs. " << current->amount << "\n";
             current = current->next;
         }
     }
 
-    void displayOrderQueue() { orderQueue.displayOrders(); }
-    void displayBill() { writeBill(cout); }
+    void displayOrderQueue()
+    {
+        orderQueue.displayOrdersQueue();
+    }
+    void displayBill()
+    {
+        writeBill();
+    }
 
     void saveBill()
     {
@@ -1045,8 +1147,7 @@ public:
             cout << "Unable to save bill.\n";
             return;
         }
-        writeBill(file);
-        file << "\n\n";
+        writeBillToFile(file);
         cout << "\nBill saved successfully!\n";
     }
 
@@ -1100,7 +1201,8 @@ void staff(Restaurant &restaurant)
     {
         cout << "\n1. View Saved Bills\n";
         cout << "2. View Pending Orders\n";
-        cout << "3. Logout\n";
+        cout << "3. Remove first Pending Order\n";
+        cout << "4. Logout\n";
 
         choice = restaurant.getInteger("Enter your choice: ");
 
@@ -1113,8 +1215,10 @@ void staff(Restaurant &restaurant)
         case 2:
             restaurant.displayOrderQueue();
             break;
-
         case 3:
+            restaurant.removeFirstPendingOrder();
+            break;
+        case 4:
             cout << "Staff logged out successfully.\n";
             break;
 
@@ -1122,7 +1226,7 @@ void staff(Restaurant &restaurant)
             cout << "Invalid choice! Please select 1 to 3.\n";
         }
 
-    } while (choice != 3);
+    } while (choice != 4);
 }
 
 int main()
@@ -1140,6 +1244,10 @@ int main()
             coustomer(restaurant);
         else if (position == 2)
             staff(restaurant);
+        else if (position == 3)
+        {
+            return 0;
+        }
         else if (position != 3)
             cout << "Invalid position.\n";
 
