@@ -27,28 +27,54 @@ public:
 
     void displayMenu() override
     {
-        cout << "\n---------- PIZZA MENU ----------\n";
-        cout << "1. Grilled Veggies Pizza - Rs. 550\n";
-        cout << "2. Veggie Supreme Pizza  - Rs. 550\n";
-        cout << "3. Margherita Pizza      - Rs. 750\n";
-        cout << "4. Tandoori Paneer Pizza - Rs. 900\n";
-        cout << "5. Paneer Tikka Pizza    - Rs. 850\n";
+        cout << "\n------------------------------ PIZZA MENU ------------------------------\n";
+        cout << "No.  Pizza Name                   Small (S)   Medium (M)   Large (L)\n";
+        cout << "-------------------------------------------------------------------------\n";
+        cout << "1.   Grilled Veggies Pizza        Rs. 200      Rs. 300      Rs. 350\n";
+        cout << "2.   Veggie Supreme Pizza         Rs. 200      Rs. 300      Rs. 350\n";
+        cout << "3.   Margherita Pizza             Rs. 230      Rs. 330      Rs. 380\n";
+        cout << "4.   Tandoori Paneer Pizza        Rs. 280      Rs. 380      Rs. 430\n";
+        cout << "5.   Paneer Tikka Pizza           Rs. 300      Rs. 400      Rs. 450 \n";
+    }
+     int getPizzaSizePrice(int size)
+    {
+        switch (size)
+        {
+        case 1: return 0;
+        case 2: return  100;
+        case 3: return 150;
+        }
     }
 
+    string getPizzaSizeName(int size)
+    {
+        switch (size)
+        {
+        case 1: return "Small";
+        case 2: return "Medium";
+        case 3: return "Large";
+        default: return "";
+        }
+    }
     int getPrice(int choice) override
+    {
+        return getPrice(choice, 0);
+    }
+
+    int getPrice(int choice, int sizeprice)
     {
         switch (choice)
         {
         case 1:
-            return 550;
+            return 200 + sizeprice;
         case 2:
-            return 550;
+            return 200 + sizeprice;
         case 3:
-            return 750;
+            return 230 + sizeprice;
         case 4:
-            return 900;
+            return 280 + sizeprice;
         case 5:
-            return 850;
+            return 300 + sizeprice;
         default:
             return 0;
         }
@@ -1015,21 +1041,49 @@ public:
 
             item->displayMenu();
             int choice = getInteger("Enter food item Choice: ");
-            int price = item->getPrice(choice);
+            int price = 0;
+            int sizeprice;
+            string itemName;
+            if (category == 1)
+            {
+                itemName = item->getItemName(choice);
+                if (itemName == " ")
+                {
+                    cout << "Invalid choice! Please select a valid number.\n";
+                    continue;
+                }
+
+                cout << "\nSelect Pizza Size:\n";
+                cout << "1. Small (S)\n";
+                cout << "2. Medium (M)\n";
+                cout << "3. Large (L)\n";
+
+                int size = getInteger("Enter size choice: ");
+                while (size < 1 || size > 3)
+                {
+                    cout << "Invalid size! Please select 1, 2, or 3.\n";
+                    size = getInteger("Enter size choice: ");
+                }
+
+                sizeprice = pizza.getPizzaSizePrice(size);
+                price = pizza.getPrice(choice, sizeprice);
+                itemName += " (" + pizza.getPizzaSizeName(size) + ")";
+            }
+            else{
+            price = item->getPrice(choice); 
             if (price <= 0)
             {
                 cout << "Invalid food item! Please select a valid number.\n";
                 continue;
             }
-
+            string itemName = item->getItemName(choice);
+        }   
             int quantity = getInteger("Enter quantity: ");
             if (quantity <= 0)
             {
                 cout << "Quantity must be greater than zero.\n";
                 continue;
             }
-
-            string itemName = item->getItemName(choice);
             int amount = price * quantity;
             OrderNode *newOrder = new OrderNode(itemName, price, quantity, amount, category);
 
@@ -1230,7 +1284,8 @@ void staff(Restaurant &restaurant)
 }
 
 int main()
-{
+{   
+    system("cls");
     Restaurant restaurant;
     int position = 0;
     system("cls");
